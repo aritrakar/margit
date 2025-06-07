@@ -17,7 +17,13 @@ func saveObject(obj interface{}) ([]byte, error) {
 
 	hash := sha256.Sum256(data)
 	hashStr := fmt.Sprintf("%x", hash[:])
+
+	// Check if the object hash already exists
 	filePath := filepath.Join(objectDir, hashStr)
+	if _, err := os.Stat(filePath); err == nil {
+		// Object already exists, return the existing hash
+		return hash[:], nil
+	}
 
 	err = os.WriteFile(filePath, data, 0644)
 	if err != nil {

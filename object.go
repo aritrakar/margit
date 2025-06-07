@@ -1,16 +1,11 @@
 package main
 
+import "time"
+
 type Blob struct {
 	Data []byte
 	Hash []byte
 }
-
-// type EntryType byte
-
-// const (
-// 	TypeBlob EntryType = iota
-// 	TypeTree
-// )
 
 const (
 	EntryBlob = 0
@@ -30,8 +25,8 @@ type Tree struct {
 
 type Commit struct {
 	TreeHash   []byte
-	ParentHash []byte
+	ParentHash []byte // nil for initial commit
 	Message    string
-	Timestamp  string // for now, keep it string
+	Timestamp  time.Time
 	Hash       []byte
 }

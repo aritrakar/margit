@@ -1,8 +1,15 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
+)
+
+const (
+	Yellow = "\033[33m"
+	Blue   = "\033[34m"
+	Reset  = "\033[0m"
 )
 
 func ensureObjectDir() error {
@@ -34,4 +41,16 @@ func printTreeFromHash(hash []byte, indent string) {
 			printTreeFromHash(entry.Hash, indent+"  ")
 		}
 	}
+}
+
+func test(path string) {
+	tree, err := BuildTree(path)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Merkle root of directory:", hex.EncodeToString(tree.Hash))
+	fmt.Println("Tree entries:")
+	printTreeFromHash(tree.Hash, "")
 }

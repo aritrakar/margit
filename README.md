@@ -55,3 +55,7 @@ After making a small change to `test/test1/a`:
 ## 🤔 Why "margit"?
 
 [Margit, The Fell Omen](https://eldenring.wiki.fextralife.com/Margit,+The+Fell+Omen) is a boss in the video game _Elden Ring_. There's no connection to the project apart from the name being a play on "Git" and the character's name and the fact that I'm a fan.
+
+## 🤔 Why Golang?
+
+Because I want to learn Go and this is a fun project to explore its features.
