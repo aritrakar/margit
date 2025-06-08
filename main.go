@@ -54,7 +54,13 @@ func main() {
 		// No options for log yet, but can be extended later
 		logCmd.Parse(os.Args[2:])
 
-		data, err := os.ReadFile(headPath)
+		refPath, err := getCurrentRefPath()
+		if err != nil {
+			fmt.Printf("failed to get current ref path: %w", err)
+			os.Exit(1)
+		}
+
+		data, err := os.ReadFile(refPath)
 		if err != nil {
 			fmt.Println("Error reading HEAD:", err)
 			os.Exit(1)
