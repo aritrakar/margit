@@ -15,7 +15,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Having the error check here ensures the object directory
+	// exists before any commands are run
+	err := ensureObjectDir()
+	if err != nil {
+		fmt.Println("Error ensuring object directory:", err)
+		os.Exit(1)
+	}
+
 	switch os.Args[1] {
+	case "init":
+		initCmd := flag.NewFlagSet("init", flag.ExitOnError)
+		initCmd.Parse(os.Args[2:])
+
+		err := runInit()
+		if err != nil {
+			fmt.Println("Initialization failed:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Margit repository initialized successfully.")
 	case "commit":
 		commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
 		message := commitCmd.String("m", "", "Commit message")
@@ -36,7 +54,6 @@ func main() {
 		// No options for log yet, but can be extended later
 		logCmd.Parse(os.Args[2:])
 
-		headPath := ".margit/HEAD"
 		data, err := os.ReadFile(headPath)
 		if err != nil {
 			fmt.Println("Error reading HEAD:", err)

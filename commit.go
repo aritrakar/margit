@@ -1,21 +1,62 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
-func runCommit(message string) error {
-	err := ensureObjectDir()
+// NOTE: No support for branches yet so we use a fixed path for main branch.
+
+const headPath = ".margit/HEAD"
+
+func getCurrentRefPath() (string, error) {
+	data, err := os.ReadFile(headPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
+	// Trim whitespace and check if it starts with "ref: "
+	line := strings.TrimSpace(string(data))
+	if strings.HasPrefix(line, "ref: ") {
+		return filepath.Join(".margit", strings.TrimPrefix(line, "ref: ")), nil
+	}
+	return "", fmt.Errorf("HEAD is not a ref")
+}
+
+func runInit() error {
+	err := os.MkdirAll(".margit/objects", os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create object directory: %w", err)
+	}
+
+	// Create refs directory
+	err = os.MkdirAll(".margit/refs/heads", os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create refs directory: %w", err)
+	}
+
+	// Create refs/heads/main file
+	err = os.WriteFile(".margit/refs/heads/main", []byte{}, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to create main branch reference: %w", err)
+	}
+
+	// HEAD file points to the main branch
+	err = os.WriteFile(headPath, []byte("ref: refs/heads/main"), 0644)
+
+	fmt.Println("Initialized empty Margit repository in .margit")
+	return nil
+}
+
+func runCommit(message string) error {
 	// Step 1: Build the tree from current directory
+	// TODO: This needs to change to use a specific directory?
 	tree, err := BuildTree("./test")
 	if err != nil {
 		return err
@@ -23,9 +64,13 @@ func runCommit(message string) error {
 
 	// Step 2: Load parent hash if available
 	var parentHash []byte
-	headPath := ".margit/HEAD"
-	if data, err := os.ReadFile(headPath); err == nil {
-		parentHash = data
+	refPath, err := getCurrentRefPath()
+	if err != nil {
+		return fmt.Errorf("failed to get current ref path: %w", err)
+	}
+
+	if data, err := os.ReadFile(refPath); err == nil {
+		parentHash = bytes.TrimSpace(data)
 	}
 
 	// Step 3: Create and save commit object
@@ -51,7 +96,7 @@ func runCommit(message string) error {
 	}
 
 	// Step 4: Update HEAD
-	err = os.WriteFile(headPath, commit.Hash, 0644)
+	err = os.WriteFile(refPath, commit.Hash, 0644)
 	if err != nil {
 		return err
 	}
