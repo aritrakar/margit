@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -65,4 +66,40 @@ func BuildTree(path string) (*Tree, error) {
 
 	tree.Hash = hash
 	return tree, nil
+}
+
+func printTreeFromHash(hash []byte, indent string) {
+	var tree Tree
+	err := loadObject(hash, &tree)
+	if err != nil {
+		fmt.Printf("%s(error loading tree: %v)\n", indent, err)
+		return
+	}
+
+	for _, entry := range tree.Entries {
+		fmt.Printf("%s- %s [%s] %x\n", indent, entry.Name, typeToString(entry.Type), entry.Hash)
+		if entry.Type == EntryTree {
+			printTreeFromHash(entry.Hash, indent+"  ")
+		}
+	}
+}
+
+func flattenTree(tree *Tree, prefix string, result map[string][32]byte) error {
+	for _, entry := range tree.Entries {
+		logicalPath := filepath.Join(prefix, entry.Name)
+		if entry.Type == EntryTree {
+			var sub Tree
+			if err := loadObject(entry.Hash, &sub); err != nil {
+				return err
+			}
+			if err := flattenTree(&sub, logicalPath, result); err != nil {
+				return err
+			}
+		} else {
+			var hash [32]byte
+			copy(hash[:], entry.Hash)
+			result[logicalPath] = hash
+		}
+	}
+	return nil
 }

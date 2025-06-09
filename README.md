@@ -7,6 +7,8 @@ This is a simple version control system written in Go that mimics Git's core con
 - Storing all objects on disk using content-addressed storage (`.margit/objects/`)
 - Recursively walking a directory to compute its Merkle root
 - Printing a tree view of the directory structure using stored objects
+- Print the commit history
+- Show uncommitted changes
 
 ## 📁 Example Structure
 
@@ -24,12 +26,12 @@ project/
 Running the program will:
 
 - Create `blob` objects for each file
-- Create `tree` objects for `subdir/` and `project/`
+- Create `tree` objects for `project/` and `subdir/`
 - Store them in `.margit/objects/<sha256>`
 
 ## 🛠 Usage
 
-1. Run the program with a target directory (e.g. `testdata/`)
+1. Run the program with a target directory (e.g. `test/`)
 2. It will create a `.margit/objects/` folder (if not already present)
 3. The Merkle root hash is printed, along with the tree structure
 
@@ -48,8 +50,10 @@ After making a small change to `test/test1/a`:
 
 ## 🔧 Next Steps (WIP)
 
-- Implement commits and commit history
-- Add a CLI interface (`margit init`, `add`, `commit`, etc.)
+- Support for:
+  - Branches
+  - Staging and unstaging files
+  - Tagging commits
 - Object compression and type prefixing (like Git's loose objects)
 
 ## 🤔 Why "margit"?

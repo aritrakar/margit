@@ -19,7 +19,7 @@ func saveObject(obj interface{}) ([]byte, error) {
 	hashStr := fmt.Sprintf("%x", hash[:])
 
 	// Check if the object hash already exists
-	filePath := filepath.Join(objectDir, hashStr)
+	filePath := filepath.Join(OBJECT_DIR, hashStr)
 	if _, err := os.Stat(filePath); err == nil {
 		// Object already exists, return the existing hash
 		return hash[:], nil
@@ -35,7 +35,7 @@ func saveObject(obj interface{}) ([]byte, error) {
 
 func loadObject(hash []byte, out interface{}) error {
 	hashStr := fmt.Sprintf("%x", hash)
-	filePath := filepath.Join(objectDir, hashStr)
+	filePath := filepath.Join(OBJECT_DIR, hashStr)
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {

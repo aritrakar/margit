@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 const (
@@ -13,7 +15,7 @@ const (
 )
 
 func ensureObjectDir() error {
-	return os.MkdirAll(objectDir, os.ModePerm)
+	return os.MkdirAll(OBJECT_DIR, os.ModePerm)
 }
 
 func typeToString(t uint8) string {
@@ -24,22 +26,6 @@ func typeToString(t uint8) string {
 		return "tree"
 	default:
 		return "unknown"
-	}
-}
-
-func printTreeFromHash(hash []byte, indent string) {
-	var tree Tree
-	err := loadObject(hash, &tree)
-	if err != nil {
-		fmt.Printf("%s(error loading tree: %v)\n", indent, err)
-		return
-	}
-
-	for _, entry := range tree.Entries {
-		fmt.Printf("%s- %s [%s] %x\n", indent, entry.Name, typeToString(entry.Type), entry.Hash)
-		if entry.Type == EntryTree {
-			printTreeFromHash(entry.Hash, indent+"  ")
-		}
 	}
 }
 
@@ -54,3 +40,45 @@ func test(path string) {
 	fmt.Println("Tree entries:")
 	printTreeFromHash(tree.Hash, "")
 }
+
+func getCurrentRefPath() (string, error) {
+	data, err := os.ReadFile(headPath)
+	if err != nil {
+		return "", err
+	}
+
+	// Trim whitespace and check if it starts with "ref: "
+	line := strings.TrimSpace(string(data))
+	if strings.HasPrefix(line, "ref: ") {
+		return filepath.Join(".margit", strings.TrimPrefix(line, "ref: ")), nil
+	}
+	return "", fmt.Errorf("HEAD is not a ref")
+}
+
+// func flattenWorkingDir(root string, prefix string, result map[string][32]byte) error {
+// 	fmt.Println("Flattening working directory:", root)
+
+// 	files, err := os.ReadDir(root)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	for _, file := range files {
+// 		name := file.Name()
+// 		diskPath := filepath.Join(root, name)
+// 		logicalPath := filepath.Join(prefix, name)
+
+// 		if file.IsDir() {
+// 			if err := flattenWorkingDir(diskPath, logicalPath, result); err != nil {
+// 				return err
+// 			}
+// 		} else {
+// 			data, err := os.ReadFile(diskPath)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			result[logicalPath] = sha256.Sum256(data)
+// 		}
+// 	}
+// 	return nil
+// }

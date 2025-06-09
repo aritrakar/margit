@@ -7,7 +7,8 @@ import (
 	"os"
 )
 
-const objectDir = ".margit/objects"
+const OBJECT_DIR = ".margit/objects"
+const WORKING_DIR = "./test"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -56,7 +57,7 @@ func main() {
 
 		refPath, err := getCurrentRefPath()
 		if err != nil {
-			fmt.Printf("failed to get current ref path: %w", err)
+			fmt.Println("failed to get current ref path: ", err)
 			os.Exit(1)
 		}
 
@@ -93,7 +94,44 @@ func main() {
 			}
 			currentHash = commit.ParentHash
 		}
+	case "status":
+		statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
+		statusCmd.Parse(os.Args[2:])
+		err := runStatus()
+		if err != nil {
+			fmt.Println("Status check failed:", err)
+			os.Exit(1)
+		}
+	case "tree":
+		// Display the current commit tree (excluding uncommitted changes)
+		treeCmd := flag.NewFlagSet("tree", flag.ExitOnError)
+		treeCmd.Parse(os.Args[2:])
 
+		commit, err := getLatestCommit()
+		if err != nil {
+			fmt.Println("Error getting latest commit:", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("Current commit tree:")
+
+		// Load the tree object for the current commit (i.e. without current changes)
+		var tree Tree
+		if err := loadObject(commit.TreeHash, &tree); err != nil {
+			fmt.Println("Error loading tree object:", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("Printing tree from hash:")
+		printTreeFromHash(commit.TreeHash, "")
+	case "tree-all":
+		// Display the entire tree including uncommitted changes
+		treeAllCmd := flag.NewFlagSet("tree-all", flag.ExitOnError)
+		treeAllCmd.Parse(os.Args[2:])
+
+		fmt.Println("Current commit tree including uncommitted changes:")
+
+		// TODO: What to do???
 	default:
 		fmt.Println("Unknown command:", os.Args[1])
 		os.Exit(1)
